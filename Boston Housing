@@ -1,0 +1,51 @@
+# Housting Data
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split 
+from sklearn.linear_model import LinearRegression 
+from sklearn import metrics 
+from sklearn.impute import SimpleImputer
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv("C:/Users/vusal/Downloads/archive.zip")
+print(df.head())
+
+# NaN-ları ortalama ilə doldurmaq
+imputer = SimpleImputer(strategy='mean')
+X = df.drop('MEDV', axis=1)
+y = df['MEDV']
+X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns)
+
+# Train-test split
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Model
+lr = LinearRegression()
+lr.fit(x_train, y_train)
+
+# Prediction və qiymətləndirmə
+y_pred = lr.predict(x_test)
+r2 = metrics.r2_score(y_test, y_pred)
+n, p = x_test.shape
+adjusted_r2 = 1 - (1-r2)*(n-1)/(n-p-1)
+
+print("R2:", r2)
+print("Adjusted R2:", adjusted_r2)
+print("MAE:", metrics.mean_absolute_error(y_test, y_pred))
+print("MSE:", metrics.mean_squared_error(y_test, y_pred))
+print("RMSE:", np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+
+# Coefficients
+coef = pd.DataFrame({'Feature': X.columns, 'Coefficient': lr.coef_})
+print(coef)
+
+# Scatter plot
+plt.figure(figsize=(8,6))
+plt.scatter(y_test, y_pred, color='blue')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--')
+plt.xlabel('Actual MEDV')
+plt.ylabel('Predicted MEDV')
+plt.title('Actual & Predicted MEDV')
+plt.show()
